@@ -98,7 +98,7 @@ module "ec2_instance" {
   vpc_security_group_ids      = [module.sg.security_group_id]
   subnet_id                   = module.vpc.public_subnets[0]
   associate_public_ip_address = true
-  user_data                   = file("../scripts/install_tools.sh")
+  user_data                   = file("/home/an/Capstone_Project/scripts/install_tools.sh")
   availability_zone           = data.aws_availability_zones.azs.names[0]
 
   tags = {
