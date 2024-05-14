@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # Ref - https://www.jenkins.io/doc/book/installing/linux/
-# Installing jenkins
-sudo yum install wget -y
-sudo wget -O /etc/yum.repos.d/jenkins.repo \
-    https://pkg.jenkins.io/redhat/jenkins.repo
-sudo rpm --import https://pkg.jenkins.io/redhat/jenkins.io-2023.key
-sudo yum upgrade -y
-# Add required dependencies for the jenkins package
-sudo yum install java-17-amazon-corretto-devel -y
-sudo yum install jenkins -y
+# Installing Jenkins
+sudo apt update -y
+sudo apt install wget -y
+wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt update -y
+# Add required dependencies for the Jenkins package
+sudo apt install openjdk-17-jdk -y
+sudo apt install jenkins -y
 sudo systemctl daemon-reload
 
 # Starting Jenkins
@@ -18,30 +18,33 @@ sudo systemctl start jenkins
 sudo systemctl status jenkins
 
 # Ref - https://www.atlassian.com/git/tutorials/install-git
-# Installing git
-sudo yum install -y git
+# Installing Git
+sudo apt install -y git
 git --version
 
-# Installing Docker 
-# Ref - https://www.cyberciti.biz/faq/how-to-install-docker-on-amazon-linux-2/
-sudo yum update
-sudo yum install docker -y
+# Installing Docker
+# Ref - https://docs.docker.com/engine/install/ubuntu/
+sudo apt update
+sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt update
+sudo apt install -y docker-ce
 
-sudo usermod -a -G docker ec2-user
+sudo usermod -aG docker ${USER}
 sudo usermod -aG docker jenkins
 
-# Add group membership for the default ec2-user so you can run all docker commands without using the sudo command:
-id ec2-user
+# Add group membership for the default user so you can run all docker commands without using the sudo command:
 newgrp docker
 
-sudo systemctl enable docker.service
-sudo systemctl start docker.service
-sudo systemctl status docker.service
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo systemctl status docker
 
 sudo chmod 777 /var/run/docker.sock
 
-# Run Docker Container of Sonarqube
-docker run -d  --name sonar -p 9000:9000 sonarqube:lts-community
+# Run Docker Container of SonarQube
+docker run -d --name sonar -p 9000:9000 sonarqube:lts-community
 
 # Installing AWS CLI
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -49,34 +52,34 @@ sudo apt install unzip -y
 unzip awscliv2.zip
 sudo ./aws/install
 
-# Ref - https://developer.hashicorp.com/terraform/cli/install/yum
-# Installing terraform
-sudo yum install -y yum-utils
-sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
-sudo yum -y install terraform
+# Ref - https://developer.hashicorp.com/terraform/cli/install/apt
+# Installing Terraform
+sudo apt update && sudo apt install -y gnupg software-properties-common
+wget -O- https://apt.releases.hashicorp.com/gpg | \
+    gpg --dearmor | \
+    sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
+    sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update
+sudo apt install -y terraform
 
-# Ref - https://pwittrock.github.io/docs/tasks/tools/install-kubectl/
+# Ref - https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
 # Installing kubectl
-sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl
-sudo chmod +x ./kubectl
-sudo mkdir -p $HOME/bin && sudo cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
 # Installing Trivy
 # Ref - https://aquasecurity.github.io/trivy-repo/
-sudo tee /etc/yum.repos.d/trivy.repo << 'EOF'
-[trivy]
-name=Trivy repository
-baseurl=https://aquasecurity.github.io/trivy-repo/rpm/releases/$basearch/
-gpgcheck=1
-enabled=1
-gpgkey=https://aquasecurity.github.io/trivy-repo/rpm/public.key
-EOF
+sudo apt install -y apt-transport-https gnupg lsb-release
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+sudo apt update
+sudo apt install -y trivy
 
-sudo yum -y update
-sudo yum -y install trivy
-
-# Intalling Helm
+# Installing Helm
 # Ref - https://helm.sh/docs/intro/install/
-curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-chmod 700 get_helm.sh
-./get_helm.sh
+curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+sudo apt install apt-transport-https --yes
+echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+sudo apt update
+sudo apt install helm -y
