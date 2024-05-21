@@ -13,3 +13,5 @@ resource "local_file" "ssh_key" {
   content = tls_private_key.keypair.private_key_pem
 }
 
+
+

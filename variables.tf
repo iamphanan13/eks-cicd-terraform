@@ -1,6 +1,16 @@
+variable "subnet_count" {
+  type = map(number)
+  description = "Counting the subnets"
+  default = {
+    "public" = 1,
+    "subnet" = 2
+  }
+}
+
+
 variable "vpc_name" {
     type = string
-    default = "EKS_VPC"
+    default = "Jenkins_VPC"
 }
 
 variable "vpc_cidr" {
@@ -28,6 +38,17 @@ variable "jenkins_sg" {
     default = "SG ID for Jenkins Server"
 
 }
+variable "settings" {
+    description = "Configure the VM"
+    type = map(any)
+
+    default = {
+        "app" = {
+        instance_type = "t3.micro"
+        count = 1 
+        }
+    }
+}
 
 variable "ec2_jenkins_instance" {
     type = string
@@ -38,5 +59,5 @@ variable "ec2_jenkins_instance" {
 variable "instance_type" {
   type = string 
   description = "EC2 Type"
-  default = "t2.micro"
+  default = "t3.micro"
 }
